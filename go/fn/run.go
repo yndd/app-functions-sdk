@@ -41,7 +41,7 @@ func Run(p ManagedResourceProcessor, input []byte) (out []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("Managed Resource: %v\n", mr)
+	fmt.Printf("Managed Resource: \n %v\n", mr)
 	defer func() {
 		// if we run into a panic, we still need to log the error to Results,
 		// and return the ResourceList and error.
