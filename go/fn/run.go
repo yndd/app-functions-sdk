@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 )
 
 func AsMain(input interface{}) error {
@@ -36,12 +39,21 @@ func AsMain(input interface{}) error {
 
 // Run evaluates the function. input must be a Managed Resource in yaml format. A
 // New Managed Resource will be returned
-func Run(p ManagedResourceProcessor, input []byte) (out []byte, err error) {
-	mr, err := ParseManagedResource(input)
+func Run(p ManagedResourceProcessor, b []byte) (out []byte, err error) {
+	obj := &unstructured.Unstructured{}
+
+	// decode YAML into unstructured.Unstructured
+	dec := yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+	_, gvk, err := dec.Decode(b, nil, obj)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("Managed Resource: \n %v\n", mr)
+	/*mr, err := ParseManagedResource(input)
+	if err != nil {
+		return nil, err
+	}
+	*/
+	fmt.Printf("Managed Resource: \n gvk: \n %v\n obj: \n %v\n ", gvk, obj)
 	defer func() {
 		// if we run into a panic, we still need to log the error to Results,
 		// and return the ResourceList and error.
@@ -67,6 +79,7 @@ func Run(p ManagedResourceProcessor, input []byte) (out []byte, err error) {
 			//out, _ = mr.ToYAML()
 		}
 	}()
+	/*
 	newmr, fnErr := p.Process(mr)
 	out, yamlErr := newmr.ToYAML()
 	if yamlErr != nil {
@@ -75,6 +88,7 @@ func Run(p ManagedResourceProcessor, input []byte) (out []byte, err error) {
 	if fnErr != nil {
 		return out, fnErr
 	}
+	*/
 	//if !success {
 	//	return out, fmt.Errorf("error: function failure")
 	//}
