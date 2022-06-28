@@ -2,6 +2,10 @@ package fn
 
 import (
 	"fmt"
+
+	"github.com/yndd/app-functions-sdk/go/fn/internal"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // ParseManagedResource parses a Managed Resource from the input byte array. This function can be used to parse either KRM fn input
@@ -58,4 +62,31 @@ func ParseManagedResource(in []byte) (*KubeObject, error) {
 			}
 	*/
 	return mrObj, nil
+}
+
+// toYNode converts the ResourceList to the yaml.Node representation.
+func (rl *KubeObject) toYNode() (*yaml.Node, error) {
+	reMap := internal.NewMap(nil)
+	reObj := &KubeObject{SubObject{reMap}}
+	reObj.SetAPIVersion(kio.ResourceListAPIVersion)
+	reObj.SetKind(kio.ResourceListKind)
+
+	return reMap.Node(), nil
+}
+
+// ToYAML converts the ResourceList to yaml.
+func (mr *KubeObject) ToYAML() ([]byte, error) {
+	// Sort the resources first.
+	//mr.Sort()
+	ynode, err := mr.toYNode()
+	if err != nil {
+		return nil, err
+	}
+	doc := internal.NewDoc([]*yaml.Node{ynode}...)
+	return doc.ToYAML()
+}
+
+// Sort sorts the ResourceList.items by apiVersion, kind, namespace and name.
+func (mr *KubeObject) Sort() {
+	//sort.Sort(mr.Items)
 }

@@ -68,12 +68,10 @@ func Run(p ManagedResourceProcessor, input []byte) (out []byte, err error) {
 		}
 	}()
 	success, fnErr := p.Process(mr)
-	/*
 	out, yamlErr := mr.ToYAML()
 	if yamlErr != nil {
 		return out, yamlErr
 	}
-	*/
 	if fnErr != nil {
 		return out, fnErr
 	}
