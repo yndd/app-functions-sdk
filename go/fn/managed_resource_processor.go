@@ -1,14 +1,12 @@
 package fn
 
-import "github.com/yndd/ndd-runtime/pkg/resource"
-
 type ManagedResourceProcessor interface {
-	Process(mr resource.Managed) (bool, error)
+	Process(mr *KubeObject) (bool, error)
 }
 
 // ManagedResourceProcessorFunc converts a compatible function to a ManagedResourceProcessor.
-type ManagedResourceProcessorFunc func(mr resource.Managed) (bool, error)
+type ManagedResourceProcessorFunc func(mr *KubeObject) (bool, error)
 
-func (p ManagedResourceProcessorFunc) Process(mr resource.Managed) (bool, error) {
+func (p ManagedResourceProcessorFunc) Process(mr *KubeObject) (bool, error) {
 	return p(mr)
 }
