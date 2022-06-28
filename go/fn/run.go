@@ -67,16 +67,16 @@ func Run(p ManagedResourceProcessor, input []byte) (out []byte, err error) {
 			//out, _ = mr.ToYAML()
 		}
 	}()
-	success, fnErr := p.Process(mr)
-	out, yamlErr := mr.ToYAML()
+	newmr, fnErr := p.Process(mr)
+	out, yamlErr := newmr.ToYAML()
 	if yamlErr != nil {
 		return out, yamlErr
 	}
 	if fnErr != nil {
 		return out, fnErr
 	}
-	if !success {
-		return out, fmt.Errorf("error: function failure")
-	}
+	//if !success {
+	//	return out, fmt.Errorf("error: function failure")
+	//}
 	return out, nil
 }
