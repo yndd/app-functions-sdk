@@ -53,7 +53,7 @@ func Run(p ResourceContextProcessor, input []byte) (out []byte, err error) {
 		}
 		fmt.Printf("Managed Resource: \ngvk: \n %v\nobj: \n %v\n ", gvk, obj)
 	*/
-	rc, err := ParseResourceContext(input)
+	rctx, err := ParseResourceContext(input)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func Run(p ResourceContextProcessor, input []byte) (out []byte, err error) {
 		}
 	}()
 
-	success, fnErr := p.Process(rc)
+	success, fnErr := p.Process(rctx)
 	/*
 		out, yamlErr := newmr.ToYAML()
 		if yamlErr != nil {

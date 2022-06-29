@@ -27,16 +27,85 @@ type ResourceContextInputs struct {
 // ParseResourceContext parses a ResourceContext from the input byte array. This function can be used to parse either KRM fn input
 // or KRM fn output
 func ParseResourceContext(in []byte) (*ResourceContext, error) {
-	rc := &ResourceContext{}
-	rcObj, err := ParseKubeObject(in)
+	rctx := &ResourceContext{}
+	rctxObj, err := ParseKubeObject(in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse input bytes: %w", err)
 	}
-	if rcObj.GetKind() != ResourceContextKind {
-		return nil, fmt.Errorf("input was of unexpected kind %q; expected %s",ResourceContextKind, rcObj.GetKind())
+	if rctxObj.GetKind() != ResourceContextKind {
+		return nil, fmt.Errorf("input was of unexpected kind %q; expected %s", ResourceContextKind, rctxObj.GetKind())
 	}
-	
-	return rc, nil
+	if rctxObj.GetAPIVersion() != ResourceContextAPIVersion {
+		return nil, fmt.Errorf("input was of unexpected apiversion %q; expected %s", ResourceContextAPIVersion, rctxObj.GetAPIVersion())
+	}
+	// Parse input. Input cannot be empty, e.g. an input ResourceContext always need to origin CR.
+	input, found, err := rctxObj.obj.GetNestedMap("input")
+	if err != nil {
+		return nil, fmt.Errorf("failed when tried to get input: %w", err)
+	}
+	if !found {
+		return nil, fmt.Errorf("input was of expected but not found in %s", ResourceContextKind)
+	}
+	// Parse origin, Origin cannot be empty, e.g. an input ResourceContext always need to origin CR.
+	origin, found, err := input.GetNestedMap("origin")
+	if err != nil {
+		return nil, fmt.Errorf("failed when tried to get origin: %w", err)
+	}
+	if !found {
+		return nil, fmt.Errorf("origin was of expected but not found in %s", ResourceContextKind)
+	}
+	rctx.Input.Origin = asKubeObject(origin)
+	// Parse target, Target can be empty
+	target, found, err := input.GetNestedMap("target")
+	if err != nil {
+		return nil, fmt.Errorf("failed when tried to get target: %w", err)
+	}
+	if found {
+		rctx.Input.Target = asKubeObject(target)
+	}
+	// Parse items, Items can be empty, serve as additional input context
+	items, found, err := input.GetNestedSlice("items")
+	if err != nil {
+		return nil, fmt.Errorf("failed when tried to get items: %w", err)
+	}
+	if found {
+		objectItems, err := items.Elements()
+		if err != nil {
+			return nil, fmt.Errorf("failed to extract objects from items: %w", err)
+		}
+		for i := range objectItems {
+			rctx.Input.Items = append(rctx.Input.Items, asKubeObject(objectItems[i]))
+		}
+	}
+	// Parse outputs, Outputs can be empty, will be added when processed
+	outputs, found, err := rctxObj.obj.GetNestedSlice("outputs")
+	if err != nil {
+		return nil, fmt.Errorf("failed when tried to get outputs: %w", err)
+	}
+	if found {
+		objectOutputs, err := outputs.Elements()
+		if err != nil {
+			return nil, fmt.Errorf("failed to extract objects from ouputs: %w", err)
+		}
+		for i := range objectOutputs {
+			rctx.Outputs = append(rctx.Input.Items, asKubeObject(objectOutputs[i]))
+		}
+	}
+	// Parse Results. Results can be empty.
+	res, found, err := rctxObj.obj.GetNestedSlice("results")
+	if err != nil {
+		return nil, fmt.Errorf("failed when tried to get results: %w", err)
+	}
+	if found {
+		var results Results
+		err = res.Node().Decode(&results)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode results: %w", err)
+		}
+		rctx.Results = results
+	}
+
+	return rctx, nil
 }
 
 // toYNode converts the ResourceList to the yaml.Node representation.
