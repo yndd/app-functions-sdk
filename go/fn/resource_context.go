@@ -2,6 +2,7 @@ package fn
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/yndd/app-functions-sdk/go/fn/internal"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -109,52 +110,67 @@ func ParseResourceContext(in []byte) (*ResourceContext, error) {
 	return rctx, nil
 }
 
-// toYNode converts the ResourceList to the yaml.Node representation.
-func (rl *KubeObject) toYNode() (*yaml.Node, error) {
+// toYNode converts the ResourceContext to the yaml.Node representation.
+func (rctx *ResourceContext) toYNode() (*yaml.Node, error) {
 	reMap := internal.NewMap(nil)
-	//reObj := &KubeObject{SubObject{reMap}}
-	//reObj.SetAPIVersion(kio.ResourceListAPIVersion)
-	//reObj.SetKind(kio.ResourceListKind)
+	reObj := &KubeObject{SubObject{reMap}}
+	reObj.SetAPIVersion(ResourceContextAPIVersion)
+	reObj.SetKind(ResourceContextKind)
 
-	/*
-		if rl.Items != nil && len(rl.Items) > 0 {
+	if rctx.Input != nil {
+		if !rctx.Input.Origin.IsEmpty() {
+			if err := reMap.SetNestedMap(rctx.Input.Origin.node(), "origin"); err != nil {
+				return nil, err
+			}
+		}
+		if !rctx.Input.Target.IsEmpty() {
+			if err := reMap.SetNestedMap(rctx.Input.Origin.node(), "target"); err != nil {
+				return nil, err
+			}
+		}
+		if rctx.Input.Items != nil && len(rctx.Input.Items) > 0 {
 			itemsSlice := internal.NewSliceVariant()
-			for i := range rl.Items {
-				itemsSlice.Add(rl.Items[i].node())
+			for i := range rctx.Input.Items {
+				itemsSlice.Add(rctx.Input.Items[i].node())
 			}
 			if err := reMap.SetNestedSlice(itemsSlice, "items"); err != nil {
 				return nil, err
 			}
 		}
-		if !rl.FunctionConfig.IsEmpty() {
-			if err := reMap.SetNestedMap(rl.FunctionConfig.node(), "functionConfig"); err != nil {
-				return nil, err
-			}
-		}
+	}
 
-		if rl.Results != nil && len(rl.Results) > 0 {
-			resultsSlice := internal.NewSliceVariant()
-			for _, result := range rl.Results {
-				mv, err := internal.TypedObjectToMapVariant(result)
-				if err != nil {
-					return nil, err
-				}
-				resultsSlice.Add(mv)
-			}
-			if err := reMap.SetNestedSlice(resultsSlice, "results"); err != nil {
+	if rctx.Outputs != nil && len(rctx.Outputs) > 0 {
+		itemsSlice := internal.NewSliceVariant()
+		for i := range rctx.Outputs {
+			itemsSlice.Add(rctx.Outputs[i].node())
+		}
+		if err := reMap.SetNestedSlice(itemsSlice, "outputs"); err != nil {
+			return nil, err
+		}
+	}
+
+	if rctx.Results != nil && len(rctx.Results) > 0 {
+		resultsSlice := internal.NewSliceVariant()
+		for _, result := range rctx.Results {
+			mv, err := internal.TypedObjectToMapVariant(result)
+			if err != nil {
 				return nil, err
 			}
+			resultsSlice.Add(mv)
 		}
-	*/
+		if err := reMap.SetNestedSlice(resultsSlice, "results"); err != nil {
+			return nil, err
+		}
+	}
 
 	return reMap.Node(), nil
 }
 
 // ToYAML converts the ResourceList to yaml.
-func (mr *KubeObject) ToYAML() ([]byte, error) {
-	// Sort the resources first.
-	mr.Sort()
-	ynode, err := mr.toYNode()
+func (rctx *ResourceContext) ToYAML() ([]byte, error) {
+	// Sort the resources input.Items and outputs first.
+	rctx.Sort()
+	ynode, err := rctx.toYNode()
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +178,9 @@ func (mr *KubeObject) ToYAML() ([]byte, error) {
 	return doc.ToYAML()
 }
 
-// Sort sorts the ResourceList.items by apiVersion, kind, namespace and name.
-func (mr *KubeObject) Sort() {
-	//sort.Sort(mr.Items)
+// Sort sorts the ResourceContext.input by apiVersion, kind, namespace and name.
+// Sort sorts the ResourceContext.output by apiVersion, kind, namespace and name.
+func (rctx *ResourceContext) Sort() {
+	sort.Sort(rctx.Input.Items)
+	sort.Sort(rctx.Outputs)
 }
