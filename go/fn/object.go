@@ -22,9 +22,6 @@ func ParseKubeObject(in []byte) (*KubeObject, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse input bytes: %w", err)
 	}
-	// debug start
-	fmt.Printf("yaml doc: %#v \n", doc)
-	// debug end
 	objects, err := doc.Elements()
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract objects: %w", err)
