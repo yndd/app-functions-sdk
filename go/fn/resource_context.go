@@ -205,7 +205,15 @@ func (rctx *ResourceContext) LogResult(err error) {
 	}
 }
 
-func (rctx *ResourceContext) AddOuput(output *KubeObject) error {
+func (rctx *ResourceContext) AddOuput(outObj interface{}) error {
+	b, err := yaml.Marshal(outObj)
+	if err != nil {
+		return err
+	}
+	output, err := ParseKubeObject(b)
+	if err != nil {
+		return err
+	}
 	if rctx.Outputs == nil {
 		rctx.Outputs = KubeObjects{}
 	}
