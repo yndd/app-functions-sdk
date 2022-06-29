@@ -228,7 +228,7 @@ func (rctx *ResourceContext) GetTarget() (*targetv1.Target, error) {
 	fmt.Println()
 
 	t := &targetv1.Target{}
-	if err := yaml.Unmarshal(j, t); err != nil {
+	if err := yaml.Unmarshal(j, &t); err != nil {
 		return nil, err
 	}
 	return t, nil
