@@ -142,9 +142,9 @@ func (rctx *ResourceContext) toYNode() (*yaml.Node, error) {
 	if rctx.Outputs != nil && len(rctx.Outputs) > 0 {
 		outputsSlice := internal.NewSliceVariant()
 		for i := range rctx.Outputs {
-			outputsSliceSlice.Add(rctx.Outputs[i].node())
+			outputsSlice.Add(rctx.Outputs[i].node())
 		}
-		if err := reMap.SetNestedSlice(outputsSliceSlice, "outputs"); err != nil {
+		if err := reMap.SetNestedSlice(outputsSlice, "outputs"); err != nil {
 			return nil, err
 		}
 	}
