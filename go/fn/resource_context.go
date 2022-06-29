@@ -1,10 +1,12 @@
 package fn
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 
 	"github.com/yndd/app-functions-sdk/go/fn/internal"
+	targetv1 "github.com/yndd/target/apis/target/v1"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -191,4 +193,25 @@ func (rctx *ResourceContext) AddOuput(output *KubeObject) error {
 	}
 	rctx.Outputs = append(rctx.Outputs, output)
 	return nil
+}
+
+func (rctx *ResourceContext) GetTarget() (*targetv1.Target, error) {
+	if rctx.Input.Target == nil {
+		return nil, fmt.Errorf("expected target to be present")
+	}
+	if rctx.Input.Target.GetAPIVersion() != targetv1.TargetKindAPIVersion ||
+		rctx.Input.Target.GetKind() != targetv1.TargetKind {
+		return nil, fmt.Errorf("wrong target GVK object: apiversion: got: %s, wanted: %s, kind got %s, wanted: %s",
+			rctx.Input.Target.GetAPIVersion(), targetv1.TargetKindAPIVersion, rctx.Input.Target.GetKind(), targetv1.TargetKind,
+		)
+	}
+	b, err := yaml.Marshal(rctx.Input.Target)
+	if err != nil {
+		return nil, err
+	}
+	t := &targetv1.Target{}
+	if err := json.Unmarshal(b, &t); err != nil {
+		return nil, err
+	}
+	return t, nil
 }
