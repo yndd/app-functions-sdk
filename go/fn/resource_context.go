@@ -205,10 +205,14 @@ func (rctx *ResourceContext) GetTarget() (*targetv1.Target, error) {
 			rctx.Input.Target.GetAPIVersion(), targetv1.GroupVersion.String(), rctx.Input.Target.GetKind(), targetv1.TargetKind,
 		)
 	}
+
+	reMap := internal.NewMap(nil)
+	reMap.Node()
+
 	fmt.Println()
-	fmt.Printf("Target before marshal: %v \n", *rctx.Input.Target)
+	fmt.Printf("Target before marshal: %v \n", rctx.Input.Target.obj.Node())
 	fmt.Println()
-	b, err := yaml.Marshal(*rctx.Input.Target)
+	b, err := yaml.Marshal(rctx.Input.Target.obj.Node())
 	if err != nil {
 		return nil, err
 	}
