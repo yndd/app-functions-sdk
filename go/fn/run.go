@@ -4,20 +4,22 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 )
 
+// input is a interface to pass a ResourceContextProcessor implementation
+// AsMain also gets stdin
 func AsMain(input interface{}) error {
 	err := func() error {
-		var p ManagedResourceProcessor
+		// ResourceContextProcessor interface
+		var p ResourceContextProcessor
 		switch input := input.(type) {
-		case ManagedResourceProcessorFunc:
+		// implementation of the ResourceContextProcessor interface
+		case ResourceContextProcessorFunc:
 			p = input
 		default:
 			return fmt.Errorf("unknown input type %T", input)
 		}
+
 		in, err := ioutil.ReadAll(os.Stdin)
 		if err != nil {
 			return fmt.Errorf("unable to read from stdin: %v", err)
@@ -37,23 +39,25 @@ func AsMain(input interface{}) error {
 	return err
 }
 
-// Run evaluates the function. input must be a Managed Resource in yaml format. A
+// Run evaluates the function. input must be a ResourceContext in yaml format. A
 // New Managed Resource will be returned
-func Run(p ManagedResourceProcessor, b []byte) (out []byte, err error) {
-	obj := &unstructured.Unstructured{}
+func Run(p ResourceContextProcessor, input []byte) (out []byte, err error) {
+	/*
+		obj := &unstructured.Unstructured{}
 
-	// decode YAML into unstructured.Unstructured
-	dec := yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
-	_, gvk, err := dec.Decode(b, nil, obj)
-	if err != nil {
-		return nil, err
-	}
-	/*mr, err := ParseManagedResource(input)
-	if err != nil {
-		return nil, err
-	}
+		// decode YAML into unstructured.Unstructured
+		dec := yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+		_, gvk, err := dec.Decode(b, nil, obj)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Printf("Managed Resource: \ngvk: \n %v\nobj: \n %v\n ", gvk, obj)
 	*/
-	fmt.Printf("Managed Resource: \n gvk: \n %v\n obj: \n %v\n ", gvk, obj)
+	rc, err := ParseResourceContext(input)
+	if err != nil {
+		return nil, err
+	}
+
 	defer func() {
 		// if we run into a panic, we still need to log the error to Results,
 		// and return the ResourceList and error.
@@ -79,18 +83,19 @@ func Run(p ManagedResourceProcessor, b []byte) (out []byte, err error) {
 			//out, _ = mr.ToYAML()
 		}
 	}()
+
+	success, fnErr := p.Process(rc)
 	/*
-	newmr, fnErr := p.Process(mr)
-	out, yamlErr := newmr.ToYAML()
-	if yamlErr != nil {
-		return out, yamlErr
-	}
+		out, yamlErr := newmr.ToYAML()
+		if yamlErr != nil {
+			return out, yamlErr
+		}
+	*/
 	if fnErr != nil {
 		return out, fnErr
 	}
-	*/
-	//if !success {
-	//	return out, fmt.Errorf("error: function failure")
-	//}
+	if !success {
+		return out, fmt.Errorf("error: function failure")
+	}
 	return out, nil
 }
