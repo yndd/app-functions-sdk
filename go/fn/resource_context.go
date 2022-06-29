@@ -7,6 +7,7 @@ import (
 	"github.com/yndd/app-functions-sdk/go/fn/internal"
 	targetv1 "github.com/yndd/target/apis/target/v1"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+	sigsyaml "sigs.k8s.io/yaml"
 )
 
 const (
@@ -208,9 +209,6 @@ func (rctx *ResourceContext) GetTarget() (*targetv1.Target, error) {
 	reMap := internal.NewMap(nil)
 	reMap.Node()
 
-	fmt.Println()
-	fmt.Printf("Target before marshal:\n%v \n", rctx.Input.Target.obj.Node())
-	fmt.Println()
 	b, err := yaml.Marshal(rctx.Input.Target.obj.Node())
 	if err != nil {
 		return nil, err
@@ -220,8 +218,17 @@ func (rctx *ResourceContext) GetTarget() (*targetv1.Target, error) {
 	fmt.Printf("Target after marshal:\n%s \n", string(b))
 	fmt.Println()
 
+	j, err := sigsyaml.YAMLToJSON(b)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println()
+	fmt.Printf("Target after YAMLToJSON:\n%s \n", string(j))
+	fmt.Println()
+
 	t := &targetv1.Target{}
-	if err := yaml.Unmarshal(b, t); err != nil {
+	if err := yaml.Unmarshal(j, t); err != nil {
 		return nil, err
 	}
 	return t, nil
