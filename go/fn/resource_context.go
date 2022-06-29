@@ -1,7 +1,6 @@
 package fn
 
 import (
-	"encoding/json"
 	"fmt"
 	"sort"
 
@@ -222,7 +221,7 @@ func (rctx *ResourceContext) GetTarget() (*targetv1.Target, error) {
 	fmt.Println()
 
 	t := &targetv1.Target{}
-	if err := json.Unmarshal(b, t); err != nil {
+	if err := yaml.Unmarshal(b, t); err != nil {
 		return nil, err
 	}
 	return t, nil
