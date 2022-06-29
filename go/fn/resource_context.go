@@ -140,11 +140,11 @@ func (rctx *ResourceContext) toYNode() (*yaml.Node, error) {
 	}
 
 	if rctx.Outputs != nil && len(rctx.Outputs) > 0 {
-		itemsSlice := internal.NewSliceVariant()
+		outputsSlice := internal.NewSliceVariant()
 		for i := range rctx.Outputs {
-			itemsSlice.Add(rctx.Outputs[i].node())
+			outputsSliceSlice.Add(rctx.Outputs[i].node())
 		}
-		if err := reMap.SetNestedSlice(itemsSlice, "outputs"); err != nil {
+		if err := reMap.SetNestedSlice(outputsSliceSlice, "outputs"); err != nil {
 			return nil, err
 		}
 	}
@@ -183,4 +183,12 @@ func (rctx *ResourceContext) ToYAML() ([]byte, error) {
 func (rctx *ResourceContext) Sort() {
 	sort.Sort(rctx.Input.Items)
 	sort.Sort(rctx.Outputs)
+}
+
+func (rctx *ResourceContext) AddOuput(output *KubeObject) error {
+	if rctx.Outputs == nil {
+		rctx.Outputs = KubeObjects{}
+	}
+	rctx.Outputs = append(rctx.Outputs, output)
+	return nil
 }
