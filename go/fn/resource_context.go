@@ -33,10 +33,10 @@ func ParseResourceContext(in []byte) (*ResourceContext, error) {
 		return nil, fmt.Errorf("failed to parse input bytes: %w", err)
 	}
 	if rctxObj.GetKind() != ResourceContextKind {
-		return nil, fmt.Errorf("input was of unexpected kind %q; expected %s", ResourceContextKind, rctxObj.GetKind())
+		return nil, fmt.Errorf("input was of unexpected kind %q; expected %s", rctxObj.GetKind(), ResourceContextKind)
 	}
 	if rctxObj.GetAPIVersion() != ResourceContextAPIVersion {
-		return nil, fmt.Errorf("input was of unexpected apiversion %q; expected %s", ResourceContextAPIVersion, rctxObj.GetAPIVersion())
+		return nil, fmt.Errorf("input was of unexpected apiversion %q; expected %s", rctxObj.GetAPIVersion(), ResourceContextAPIVersion)
 	}
 	// Parse input. Input cannot be empty, e.g. an input ResourceContext always need to origin CR.
 	input, found, err := rctxObj.obj.GetNestedMap("input")
@@ -46,6 +46,7 @@ func ParseResourceContext(in []byte) (*ResourceContext, error) {
 	if !found {
 		return nil, fmt.Errorf("input was of expected but not found in %s", ResourceContextKind)
 	}
+	rctx.Input = &ResourceContextInputs{}
 	// Parse origin, Origin cannot be empty, e.g. an input ResourceContext always need to origin CR.
 	origin, found, err := input.GetNestedMap("origin")
 	if err != nil {
