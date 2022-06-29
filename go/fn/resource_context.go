@@ -188,6 +188,23 @@ func (rctx *ResourceContext) Sort() {
 	sort.Sort(rctx.Outputs)
 }
 
+func (rctx *ResourceContext) LogResult(err error) {
+	// If the error is not a Results type, we wrap the error as a Result.
+	if err == nil {
+		return
+	}
+	switch result := err.(type) {
+	case Results:
+		rctx.Results = append(rctx.Results, result...)
+	case Result:
+		rctx.Results = append(rctx.Results, &result)
+	case *Result:
+		rctx.Results = append(rctx.Results, result)
+	default:
+		rctx.Results = append(rctx.Results, ErrorResult(err))
+	}
+}
+
 func (rctx *ResourceContext) AddOuput(output *KubeObject) error {
 	if rctx.Outputs == nil {
 		rctx.Outputs = KubeObjects{}
@@ -215,25 +232,15 @@ func (rctx *ResourceContext) GetTarget() (*targetv1.Target, error) {
 		return nil, err
 	}
 
-	fmt.Println()
-	fmt.Printf("Target after marshal:\n%s \n", string(b))
-	fmt.Println()
-
 	j, err := sigsyaml.YAMLToJSON(b)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println()
-	fmt.Printf("Target after YAMLToJSON:\n%s \n", string(j))
-	fmt.Println()
-
 	t := &targetv1.Target{}
 	if err := json.Unmarshal(j, &t); err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("Target after YAMLToJSON:\n%s \n", string(j))
 
 	return t, nil
 }

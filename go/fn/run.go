@@ -79,18 +79,16 @@ func Run(p ResourceContextProcessor, input []byte) (out []byte, err error) {
 			default:
 				panic(v)
 			}
-			//mr.LogResult(err)
-			//out, _ = mr.ToYAML()
+			rctx.LogResult(err)
+			out, _ = rctx.ToYAML()
 		}
 	}()
 
 	success, fnErr := p.Process(rctx)
-	/*
-		out, yamlErr := newmr.ToYAML()
-		if yamlErr != nil {
-			return out, yamlErr
-		}
-	*/
+	out, yamlErr := rctx.ToYAML()
+	if yamlErr != nil {
+		return out, yamlErr
+	}
 	if fnErr != nil {
 		return out, fnErr
 	}

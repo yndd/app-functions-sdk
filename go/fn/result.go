@@ -1,6 +1,11 @@
 package fn
 
-import "sigs.k8s.io/kustomize/kyaml/yaml"
+import (
+	"fmt"
+	"strings"
+
+	"sigs.k8s.io/kustomize/kyaml/yaml"
+)
 
 // Severity indicates the severity of the Result
 type Severity string
@@ -31,4 +36,62 @@ type Result struct {
 	Tags map[string]string `yaml:"tags,omitempty" json:"tags,omitempty"`
 }
 
+func (i Result) Error() string {
+	return (i).String()
+}
+
+// String provides a human-readable message for the result item
+func (i Result) String() string {
+	identifier := i.ResourceRef
+	var idStringList []string
+	if identifier != nil {
+		if identifier.APIVersion != "" {
+			idStringList = append(idStringList, identifier.APIVersion)
+		}
+		if identifier.Kind != "" {
+			idStringList = append(idStringList, identifier.Kind)
+		}
+		if identifier.Namespace != "" {
+			idStringList = append(idStringList, identifier.Namespace)
+		}
+		if identifier.Name != "" {
+			idStringList = append(idStringList, identifier.Name)
+		}
+	}
+	formatString := "[%s]"
+	severity := i.Severity
+	// We default Severity to Info when converting a result to a message.
+	if i.Severity == "" {
+		severity = Info
+	}
+	list := []interface{}{severity}
+	if len(idStringList) > 0 {
+		formatString += " %s"
+		list = append(list, strings.Join(idStringList, "/"))
+	}
+	formatString += ": %s"
+	list = append(list, i.Message)
+	return fmt.Sprintf(formatString, list...)
+}
+
 type Results []*Result
+
+// Error enables Results to be returned as an error
+func (e Results) Error() string {
+	var msgs []string
+	for _, i := range e {
+		msgs = append(msgs, i.String())
+	}
+	return strings.Join(msgs, "\n\n")
+}
+
+func ErrorResult(err error) *Result {
+	return GeneralResult(err.Error(), Error)
+}
+
+func GeneralResult(msg string, severity Severity) *Result {
+	return &Result{
+		Message:  msg,
+		Severity: severity,
+	}
+}
