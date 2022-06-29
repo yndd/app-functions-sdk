@@ -205,10 +205,18 @@ func (rctx *ResourceContext) GetTarget() (*targetv1.Target, error) {
 			rctx.Input.Target.GetAPIVersion(), targetv1.GroupVersion.String(), rctx.Input.Target.GetKind(), targetv1.TargetKind,
 		)
 	}
-	b, err := yaml.Marshal(rctx.Input.Target)
+	fmt.Println()
+	fmt.Printf("Target before marshal: %v \n", *rctx.Input.Target)
+	fmt.Println()
+	b, err := yaml.Marshal(*rctx.Input.Target)
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println()
+	fmt.Printf("Target after marshal: %s \n", string(b))
+	fmt.Println()
+
 	t := &targetv1.Target{}
 	if err := json.Unmarshal(b, &t); err != nil {
 		return nil, err
