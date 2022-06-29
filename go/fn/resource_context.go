@@ -227,9 +227,9 @@ func (rctx *ResourceContext) GetTarget() (*targetv1.Target, error) {
 	fmt.Printf("Target after YAMLToJSON:\n%s \n", string(j))
 	fmt.Println()
 
-	t := &targetv1.Target{}
+	t := targetv1.Target{}
 	if err := yaml.Unmarshal(j, &t); err != nil {
 		return nil, err
 	}
-	return t, nil
+	return &t, nil
 }
