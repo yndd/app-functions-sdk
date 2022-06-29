@@ -210,7 +210,7 @@ func (rctx *ResourceContext) GetTarget() (*targetv1.Target, error) {
 	reMap.Node()
 
 	fmt.Println()
-	fmt.Printf("Target before marshal: %v \n", rctx.Input.Target.obj.Node())
+	fmt.Printf("Target before marshal:\n%v \n", rctx.Input.Target.obj.Node())
 	fmt.Println()
 	b, err := yaml.Marshal(rctx.Input.Target.obj.Node())
 	if err != nil {
@@ -218,11 +218,11 @@ func (rctx *ResourceContext) GetTarget() (*targetv1.Target, error) {
 	}
 
 	fmt.Println()
-	fmt.Printf("Target after marshal: %s \n", string(b))
+	fmt.Printf("Target after marshal:\n%s \n", string(b))
 	fmt.Println()
 
 	t := &targetv1.Target{}
-	if err := json.Unmarshal(b, &t); err != nil {
+	if err := json.Unmarshal(b, t); err != nil {
 		return nil, err
 	}
 	return t, nil
