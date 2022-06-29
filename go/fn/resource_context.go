@@ -199,10 +199,10 @@ func (rctx *ResourceContext) GetTarget() (*targetv1.Target, error) {
 	if rctx.Input.Target == nil {
 		return nil, fmt.Errorf("expected target to be present")
 	}
-	if rctx.Input.Target.GetAPIVersion() != targetv1.TargetKindAPIVersion ||
+	if rctx.Input.Target.GetAPIVersion() != targetv1.GroupVersion.String() ||
 		rctx.Input.Target.GetKind() != targetv1.TargetKind {
 		return nil, fmt.Errorf("wrong target GVK object: apiversion: got: %s, wanted: %s, kind got %s, wanted: %s",
-			rctx.Input.Target.GetAPIVersion(), targetv1.TargetKindAPIVersion, rctx.Input.Target.GetKind(), targetv1.TargetKind,
+			rctx.Input.Target.GetAPIVersion(), targetv1.GroupVersion.String(), rctx.Input.Target.GetKind(), targetv1.TargetKind,
 		)
 	}
 	b, err := yaml.Marshal(rctx.Input.Target)
