@@ -118,12 +118,12 @@ func (rctx *ResourceContext) toYNode() (*yaml.Node, error) {
 	reObj.SetKind(ResourceContextKind)
 
 	if rctx.Input != nil {
-		if !rctx.Input.Origin.IsEmpty() {
+		if rctx.Input.Origin != nil {
 			if err := reMap.SetNestedMap(rctx.Input.Origin.node(), "origin"); err != nil {
 				return nil, err
 			}
 		}
-		if !rctx.Input.Target.IsEmpty() {
+		if rctx.Input.Target != nil {
 			if err := reMap.SetNestedMap(rctx.Input.Origin.node(), "target"); err != nil {
 				return nil, err
 			}
