@@ -867,11 +867,6 @@ func (o *KubeObject) node() *internal.MapVariant {
 	return o.obj
 }
 
-func rnodeToKubeObject(rn *yaml.RNode) *KubeObject {
-	mapVariant := internal.NewMap(rn.YNode())
-	return &KubeObject{SubObject{mapVariant}}
-}
-
 // SubObject represents a map within a KubeObject
 type SubObject struct {
 	obj *internal.MapVariant
